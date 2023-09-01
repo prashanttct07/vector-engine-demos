@@ -1,0 +1,11 @@
+[server]
+sslCertFile = '/home/ec2-user/vectorlens/opensearch-samples/vectorlens/certificate.crt'
+sslKeyFile = '/home/ec2-user/vectorlens/opensearch-samples/vectorlens/private_key.key'
+port = 443
+
+[client]
+toolbarMode = "minimal"
+
+[browser]
+gatherUsageStats = false
+

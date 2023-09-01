@@ -14,7 +14,7 @@ _ = [st.session_state.setdefault(k, v) for k,v in session_variables]
 if "shared" not in st.session_state:
    st.session_state["shared"] = True
 
-def get_answers(question, model_filter):
+def get_answers(question, model_filter, knowledgebase_filter):
     context = " "
     answer = ""
     try:
@@ -25,16 +25,18 @@ def get_answers(question, model_filter):
     except ValueError:
         st.write("Sorry, We could not find an answer, please try again!")
         return
-    
+
     if model_filter == "Titan":
-        prompt = opensearch.get_titan_prompt(context, question)
+        # Pass 20K char for context, as Titan fails beyond that
+        prompt = opensearch.get_titan_prompt(context[:20000], question, knowledgebase_filter)
         answer = opensearch.titan_llm(prompt)
     else:
-        prompt = opensearch.get_claude_prompt(context, question)
+        # Pass 36K char for context, as Claude fails beyond that
+        prompt = opensearch.get_claude_prompt(context[:36000], question, knowledgebase_filter)
         answer = opensearch.claude_llm(prompt)
 
-    st.session_state.question.append(question)  
-    st.session_state.answer.append(f"Answer By {model_filter} 🎯:" + answer) 
+    st.session_state.question.append(question)
+    st.session_state.answer.append(f"Answer By {model_filter} 🎯:" + answer)
 
 
 st.set_page_config(
@@ -47,18 +49,20 @@ st.sidebar.header("Q&A ChatBot Filters")
 
 st.header('Maximizing AI Potentials: Perform Intelligent Enterprise Search for your OpenSearch documents and blogs :technologist:')
 st.caption('by Leveraging Foundational Models from :blue[Amazon Bedrock and Amazon OpenSearch Serverless as Vector Engine]')
-st.divider() 
+st.divider()
 question = st.text_input("Ask me anything about OpenSearch:", "Difference between OpenSearch Service and OpenSearch Serverless")
 
 # Filters
 with st.sidebar.form("Q&A Form"):
     model_filter = st.sidebar.selectbox("Select LLM Model", ["Claude", "Titan"])
+    knowledgebase_filter = st.sidebar.toggle("Within Knowledge Base", value=True )
 
 if question:
-    get_answers(question, model_filter)
+    get_answers(question, model_filter, knowledgebase_filter)
 
     # Create Expander for Conversational Search
     with st.expander("Conversational Search", expanded=True):
         for i in range(len(st.session_state['answer'])-1, -1, -1):
-            st.info(st.session_state["question"][i],icon="❓") 
-            st.success(st.session_state["answer"][i], icon="🧑‍🔬")            
+            st.info(st.session_state["question"][i],icon="❓")
+            st.success(st.session_state["answer"][i], icon="🧑")
+
