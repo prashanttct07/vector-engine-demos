@@ -42,7 +42,7 @@ i = 0  # Tracking bulk size for query performance stats
 boto3_bedrock = bedrock.get_bedrock_client(os.environ.get('BEDROCK_ASSUME_ROLE', None))
 
 # - create the LLM Model
-claude_llm = Bedrock(model_id="anthropic.claude-instant-v1", client=boto3_bedrock, model_kwargs={'max_tokens_to_sample':4000})
+claude_llm = Bedrock(model_id="anthropic.claude-instant-v1", client=boto3_bedrock, model_kwargs={'max_tokens_to_sample':1000})
 titan_llm = Bedrock(model_id= "amazon.titan-tg1-large", client=boto3_bedrock)
 
 # Use this if you need to generate embedding using Titan Embeddings Model.
@@ -63,9 +63,11 @@ def get_claude_prompt(context, user_question, knowledgebase_filter):
         Assistant:"""
         return prompt
     else:
-        prompt = f"""Answer the question as below:"
+        prompt = f"""Human: Answer the question as below:"
+        <question>
         {user_question}
-        """
+        </question>
+        Assistant:"""
         return prompt
 
 def get_titan_prompt(context, user_question, knowledgebase_filter):
