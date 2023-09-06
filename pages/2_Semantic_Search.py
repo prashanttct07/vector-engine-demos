@@ -42,16 +42,20 @@ if question:
             st.divider()
         for i in range(max(len(response_knn), len(response_kw))):
             headings_knn, image, headings_kw, image_kw = st.columns(4)
-            with headings_knn:            
-                st.header(response_knn[i]['title'] + " (" +  response_knn[i]["year"] + ")")
-                st.write("**" + response_knn[i]["plot"] + "**")
-                st.write("**"  + str(response_knn[i]["rating"]) + "** :star2:     " + "**" + response_knn[i]["genres"] + "**")
+            with headings_knn:           
+                if i < len(response_knn):
+                    st.header(response_knn[i]['title'] + " (" +  response_knn[i]["year"] + ")")
+                    st.write("**" + response_knn[i]["plot"] + "**")
+                    st.write("**"  + str(response_knn[i]["rating"]) + "** :star2:     " + "**" + response_knn[i]["genres"] + "**")
             with image:
-                st.image(response_knn[i]["image_url"], caption=response_knn[i]["title"], width=100)    
+                if i < len(response_knn):
+                    st.image(response_knn[i]["image_url"], caption=response_knn[i]["title"], width=100)    
             with headings_kw:            
-                st.header(response_kw[i]["title"] + " (" +  response_kw[i]["year"] + ")")
-                st.write("**" + response_kw[i]["plot"] + "**")
-                st.write("**"  + str(response_kw[i]["rating"]) + "** :star2:     " + "**" + response_kw[i]["genres"] + "**")
+                if i < len(response_kw):
+                    st.header(response_kw[i]["title"] + " (" +  response_kw[i]["year"] + ")")
+                    st.write("**" + response_kw[i]["plot"] + "**")
+                    st.write("**"  + str(response_kw[i]["rating"]) + "** :star2:     " + "**" + response_kw[i]["genres"] + "**")
             with image_kw:
-                st.image(response_kw[i]["image_url"], caption=response_kw[i]["title"], width=100)    
+                if i < len(response_kw):
+                    st.image(response_kw[i]["image_url"], caption=response_kw[i]["title"], width=100)    
 
