@@ -41,13 +41,13 @@ if question:
             st.write(f"Showing **{len(response_kw)} out of {doc_count_kw}** matched documents")
             st.divider()
         for i in range(max(len(response_knn), len(response_kw))):
-            headings_knn, image, headings_kw, image_kw = st.columns(4)
+            headings_knn, image_knn, headings_kw, image_kw = st.columns(4)
             with headings_knn:           
                 if i < len(response_knn):
                     st.header(response_knn[i]['title'] + " (" +  response_knn[i]["year"] + ")")
                     st.write("**" + response_knn[i]["plot"] + "**")
                     st.write("**"  + str(response_knn[i]["rating"]) + "** :star2:     " + "**" + response_knn[i]["genres"] + "**")
-            with image:
+            with image_knn:
                 if i < len(response_knn):
                     st.image(response_knn[i]["image_url"], caption=response_knn[i]["title"], width=100)    
             with headings_kw:            
