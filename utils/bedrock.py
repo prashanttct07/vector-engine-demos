@@ -77,7 +77,7 @@ class Bedrock:
             assert str(type(client)) == "<class 'botocore.client.Bedrock'>", f"The client passed in not a valid boto3 bedrock client, got {type(client)}"
             self.client = client
 
-    @root_validator()
+    # @root_validator()
     def validate_environment(cls, values: Dict) -> Dict:
         bedrock_client = get_bedrock_client(assumed_role=None) #boto3.client("bedrock")
         values["client"] = bedrock_client

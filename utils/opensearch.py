@@ -13,7 +13,7 @@ from utils import bedrock
 
 # Static Section
 # Bedrock constants
-os.environ['BEDROCK_ASSUME_ROLE'] = 'arn:aws:iam::706553727873:role/service-role/AmazonSageMaker-ExecutionRole-20211019T121285'
+# os.environ['BEDROCK_ASSUME_ROLE'] = 'arn:aws:iam::706553727873:role/service-role/AmazonSageMaker-ExecutionRole-20211019T121285'
 os.environ['AWS_PROFILE'] = 'bedrock_prashant'
 os.environ['AWS_DEFAULT_REGION'] = 'us-east-1'
 
@@ -177,6 +177,32 @@ def query_qna(query, index):
     )
     log_metrics(query, "qna", "semantic", relevant_documents['took'])
     return relevant_documents
+
+
+# Define queries for OpenSearch
+def query_gartner(query, index):
+    query_embedding = model.encode(query).tolist()
+    query_qna = {
+        "size": 3,
+        "fields": ["content"],
+        "_source": False,
+        "query": {
+            "knn": {
+            "v_content": {
+                "vector": query_embedding,
+                "k": vector_size
+            }
+            }
+        }
+    }
+
+    relevant_documents = client.search(
+        body = query_qna,
+        index = index
+    )
+    log_metrics(query, "gartner", "semantic", relevant_documents['took'])
+    return relevant_documents
+
 
 
 def query_movies(query, sort, genres, rating, index):
