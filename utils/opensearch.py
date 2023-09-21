@@ -12,10 +12,6 @@ sys.path.append(os.path.abspath(module_path))
 from utils import bedrock
 
 # Static Section
-# Bedrock constants
-# os.environ['BEDROCK_ASSUME_ROLE'] = 'arn:aws:iam::706553727873:role/service-role/AmazonSageMaker-ExecutionRole-20211019T121285'
-os.environ['AWS_PROFILE'] = 'bedrock_prashant'
-os.environ['AWS_DEFAULT_REGION'] = 'us-east-1'
 
 # Load the SentenceTransformer model
 model_name = 'sentence-transformers/msmarco-distilbert-base-tas-b'
@@ -25,18 +21,8 @@ model = SentenceTransformer(model_name)
 vector_size = 768
 
 # OpenSearch
-AWS_PROFILE = "273117053997-us-east-2"
-host = '0n2qav61946ja1c7k2a1.us-east-2.aoss.amazonaws.com' # OpenSearch Serverless collection endpoint
-region = 'us-east-2' # e.g. us-west-2
-
-host_metrics = 'q31x4gto5pm94bsxiu1g.us-east-2.aoss.amazonaws.com'
-# Specify index name for performance logging
-perf_logging_index_name = 'aoss-performance-search'
-
-action = {"index": {"_index": perf_logging_index_name}}
-actions = []  # prepare bulk request for performance stats
-i = 0  # Tracking bulk size for query performance stats
-
+host = os.environ.get('OPENSEARCH_HOST')
+region = os.environ.get('OPENSEARCH_REGION')
 
 # Bedrock Clients connection
 boto3_bedrock = bedrock.get_bedrock_client(os.environ.get('BEDROCK_ASSUME_ROLE', None))
@@ -44,11 +30,6 @@ boto3_bedrock = bedrock.get_bedrock_client(os.environ.get('BEDROCK_ASSUME_ROLE',
 # - create the LLM Model
 claude_llm = Bedrock(model_id="anthropic.claude-instant-v1", client=boto3_bedrock, model_kwargs={'max_tokens_to_sample':1000})
 titan_llm = Bedrock(model_id= "amazon.titan-tg1-large", client=boto3_bedrock)
-
-# Use this if you need to generate embedding using Titan Embeddings Model.
-# from langchain.embeddings import BedrockEmbeddings
-# bedrock_embeddings = BedrockEmbeddings(client=boto3_bedrock)
-# embedding = np.array(bedrock_embeddings.embed_query(document.page_content))
 
 # - Create Prompts
 def get_claude_prompt(context, user_question, knowledgebase_filter):
@@ -86,7 +67,7 @@ def get_titan_prompt(context, user_question, knowledgebase_filter):
 
 
 service = 'aoss'
-credentials = boto3.Session(profile_name=AWS_PROFILE).get_credentials()
+credentials = boto3.Session().get_credentials()
 awsauth = AWS4Auth(credentials.access_key, credentials.secret_key, region, service,
 session_token=credentials.token)
 
@@ -99,59 +80,6 @@ client = OpenSearch(
     verify_certs = True,
     connection_class = RequestsHttpConnection
 )
-
-# Create an OpenSearch client
-client_metrics = OpenSearch(
-    hosts = [{'host': host_metrics, 'port': 443}],
-    http_auth = awsauth,
-    timeout = 300,
-    use_ssl = True,
-    verify_certs = True,
-    connection_class = RequestsHttpConnection
-)
-
-
-def log_metrics(query, dataset, query_type, took):
-    perf_logging_index_name = 'aoss-performance-search'
-
-    action = {"index": {"_index": perf_logging_index_name}}
-    actions = []  # prepare bulk request for performance stats
-    try:
-        # Start Logging
-        # Prepare a document to index performance stats
-        document = {
-            "error": False,
-            "@timestamp": datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
-            "collection": host,
-            "took": took,
-            "dataset" : dataset,
-            "query_type": query_type,
-            "query": query
-        }
-
-        # Index Documents
-        actions.append(action)
-        actions.append(document)
-    except:
-        print("An exception occurred while processing the request")
-        tb = traceback.format_exc()
-        print(tb)
-        # Prepare a document to index performance stats for failure
-        document = {
-            "error": True,
-            "exception": tb,
-            "@timestamp": datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
-            "collection": host,
-            "query_type": query_type,
-            "query": query
-        }
-
-        # Append Documents for error
-        actions.append(action)
-        actions.append(document)
-    client_metrics.bulk(body=actions)
-
-
 
 
 # Define queries for OpenSearch
@@ -175,34 +103,7 @@ def query_qna(query, index):
         body = query_qna,
         index = index
     )
-    log_metrics(query, "qna", "semantic", relevant_documents['took'])
     return relevant_documents
-
-
-# Define queries for OpenSearch
-def query_gartner(query, index):
-    query_embedding = model.encode(query).tolist()
-    query_qna = {
-        "size": 3,
-        "fields": ["content"],
-        "_source": False,
-        "query": {
-            "knn": {
-            "v_content": {
-                "vector": query_embedding,
-                "k": vector_size
-            }
-            }
-        }
-    }
-
-    relevant_documents = client.search(
-        body = query_qna,
-        index = index
-    )
-    log_metrics(query, "gartner", "semantic", relevant_documents['took'])
-    return relevant_documents
-
 
 
 def query_movies(query, sort, genres, rating, index):
@@ -352,10 +253,6 @@ def query_movies(query, sort, genres, rating, index):
     hits_kw = response_kw['hits']['hits']
     doc_count_kw = response_kw['hits']['total']['value']
     results_kw = [{'genres':  hit['_source']['genres'],'image_url':  hit['_source']['image_url'],'title': hit['_source']['title'], 'rating': hit['_source']['rating'], 'year': hit['_source']['year'], 'plot' : hit['_source']['plot']} for hit in hits_kw]
-
-
-    log_metrics(query, "MOVIES", "semantic", response_knn['took'])
-    log_metrics(query, "MOVIES", "lexical", response_kw['took'])
 
     # print (f"Search Results: {search_results}")
     return results_knn, doc_count_knn, results_kw, doc_count_kw

@@ -1,48 +1,42 @@
 
 ########
 import requests
+import sys, getopt
 from opensearchpy import OpenSearch, RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
 import boto3
 import json
 import os
-import numpy as np
-from langchain.text_splitter import CharacterTextSplitter, RecursiveCharacterTextSplitter
-from langchain.document_loaders import PyPDFLoader, PyPDFDirectoryLoader
+import time
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from sentence_transformers import SentenceTransformer
 
 # Load the SentenceTransformer model
 model_name = 'sentence-transformers/msmarco-distilbert-base-tas-b'
 model = SentenceTransformer(model_name)
 
-# Set the desired vector size
+# Set the desired vector size (it should be alligned with the model you are using)
 vector_size = 768
 
-# create open search collection public endpoint in us-east-2
-AWS_PROFILE = "273117053997-us-east-2"
-host = '0n2qav61946ja1c7k2a1.us-east-2.aoss.amazonaws.com' # OpenSearch Serverless collection endpoint
-region = 'us-east-2' # e.g. us-west-2
-opensearch_index = "opensearch_qna"
+# Usage example For service docs
+owner = "awsdocs"
+repo = "amazon-opensearch-service-developer-guide"
+subfolder = "doc_source"
 
-service = 'aoss'
-credentials = boto3.Session(profile_name=AWS_PROFILE).get_credentials()
-awsauth = AWS4Auth(credentials.access_key, credentials.secret_key, region, service,
-session_token=credentials.token)
+# Usage example For Opensearch project docs
+# owner = "opensearch-project"
+# repo = "documentation-website"
+# subfolder = ""
 
-# Create an OpenSearch client
-client = OpenSearch(
-    hosts = [{'host': host, 'port': 443}],
-    http_auth = awsauth,
-    timeout = 300,
-    use_ssl = True,
-    verify_certs = True,
-    connection_class = RequestsHttpConnection
-)
+# Usage example For Opensearch project blogs
+# owner = "opensearch-project"
+# repo = "project-website"
+# subfolder = "_posts"
 
-def index_embedding(content, title, repository):
+def index_embedding(content, title, repository, client, index):
     actions =[]
     bulk_size = 0
-    action = {"index": {"_index": opensearch_index}}
+    action = {"index": {"_index": index}}
     
     text_splitter = RecursiveCharacterTextSplitter(
     # Set a really small chunk size, just to show.
@@ -76,7 +70,31 @@ def index_embedding(content, title, repository):
     print("Sending remaining documents with size: ", bulk_size)
     client.bulk(body=actions)
 
-def crawl_github_subfolder_recursive(owner, repo, subfolder):
+def crawl_github_subfolder_recursive(owner, repo, subfolder, client, index):
+
+    # Create an index if it does not exist
+    if not client.indices.exists(index=index):
+        index_body = {
+            "settings": {
+                "index.knn": True
+          },
+          'mappings': {
+            'properties': {
+              "repository": { "type": "text"},
+              "title": { "type": "text"},
+              "content": { "type": "text"},
+              "v_content": { "type": "knn_vector", "dimension": vector_size }
+            }
+          }
+        }
+    
+        client.indices.create(
+          index=index, 
+          body=index_body
+        )
+        time.sleep(5)
+
+
     # Fetch repository information
     repo_url = f"https://api.github.com/repos/{owner}/{repo}"
     repo_info = requests.get(repo_url).json()
@@ -95,7 +113,7 @@ def crawl_github_subfolder_recursive(owner, repo, subfolder):
                 content = response.text
 
                 # Index the content to OpenSearch
-                index_embedding(content, item["name"], f"{owner}/{repo}")
+                index_embedding(content, item["name"], f"{owner}/{repo}", client, index)
 
         elif item["type"] == "dir":
             # Recursively crawl subdirectories
@@ -103,20 +121,27 @@ def crawl_github_subfolder_recursive(owner, repo, subfolder):
             crawl_github_subfolder_recursive(owner, repo, subfolder_path)
 
 
-# Usage example For service docs
-owner = "awsdocs"
-repo = "amazon-opensearch-service-developer-guide"
-subfolder = "doc_source"
+def main(argv):
+    host = os.environ.get('OPENSEARCH_HOST')
+    region = os.environ.get('OPENSEARCH_REGION')
+    index = "opensearch_qna"
+    service = 'aoss'
 
-# Usage example For Opensearch project docs
-# owner = "opensearch-project"
-# repo = "documentation-website"
-# subfolder = ""
+    credentials = boto3.Session().get_credentials()
+    awsauth = AWS4Auth(credentials.access_key, credentials.secret_key, region, service,
+                   session_token=credentials.token)
 
-# Usage example For Opensearch project blogs
-# owner = "opensearch-project"
-# repo = "project-website"
-# subfolder = "_posts"
+    # Build the OpenSearch client
+    client = OpenSearch(
+        hosts = [{'host': host, 'port': 443}],
+        http_auth = awsauth,
+        timeout = 300,
+        use_ssl = True,
+        verify_certs = True,
+        connection_class = RequestsHttpConnection
+    )
+    print(f"OpenSearch Client - Sending to Amazon OpenSearch Serverless host {host} in Region {region} \n")
+    crawl_github_subfolder_recursive(owner, repo, subfolder, client, index)
 
-crawl_github_subfolder_recursive(owner, repo, subfolder)
-
+if __name__ == '__main__':
+    main(sys.argv[1:])
