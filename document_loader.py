@@ -8,7 +8,7 @@ import boto3
 import json
 import os
 import time
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.text_splitter import CharacterTextSplitter
 from sentence_transformers import SentenceTransformer
 
 # Load the SentenceTransformer model
@@ -38,11 +38,11 @@ def index_embedding(content, title, repository, client, index):
     bulk_size = 0
     action = {"index": {"_index": index}}
     
-    text_splitter = RecursiveCharacterTextSplitter(
+    text_splitter = CharacterTextSplitter(
     # Set a really small chunk size, just to show.
     chunk_size = 1000,
     chunk_overlap  = 100,
-    separators=[" "]
+    separator=" "
     )
 
     docs = text_splitter.split_text(content)
