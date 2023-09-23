@@ -28,7 +28,7 @@ python3 -m pip install --upgrade pip
 # download requirements
 python3 -m ensurepip --upgrade
 python3 -m pip install opensearch-py requests_aws4auth
-python3 -m pip install boto3 langchain==0.0.245 pypdf==3.8.1 pydantic==1.10.1
+python3 -m pip install boto3 langchain==0.0.25 pypdf==3.8.1 pydantic==1.10.1
 python3 -m pip install sentence_transformers
 
 python3 -m pip install  --no-build-isolation --force-reinstall \
