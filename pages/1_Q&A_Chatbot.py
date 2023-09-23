@@ -2,7 +2,7 @@ import streamlit as st
 import sys
 import os
 
-module_path = ".."
+module_path = "./"
 sys.path.append(os.path.abspath(module_path))
 from utils import bedrock
 from utils import opensearch

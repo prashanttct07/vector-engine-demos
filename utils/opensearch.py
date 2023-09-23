@@ -7,7 +7,7 @@ import sys
 from langchain.llms.bedrock import Bedrock
 import traceback, socket, datetime
 
-module_path = ".."
+module_path = "./"
 sys.path.append(os.path.abspath(module_path))
 from utils import bedrock
 
@@ -21,8 +21,8 @@ model = SentenceTransformer(model_name)
 vector_size = 768
 
 # OpenSearch
-host = os.environ.get('OPENSEARCH_HOST')
-region = os.environ.get('OPENSEARCH_REGION')
+host = os.environ.get('AOSS_VECOTRSEARCH_ENDPOINT')
+region = os.environ.get('AOSS_VECOTRSEARCH_REGION')
 
 # Bedrock Clients connection
 boto3_bedrock = bedrock.get_bedrock_client(os.environ.get('BEDROCK_ASSUME_ROLE', None))
