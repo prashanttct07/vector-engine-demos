@@ -21,19 +21,19 @@ fi
 cd ..
 
 # create the virtual environment
-python3 -m venv .env
+# python3 -m venv .env
 # Install into the virtual environment
-source .env/bin/activate
-
+# source .env/bin/activate
+python3 -m pip install --upgrade pip
 # download requirements
-.env/bin/python -m ensurepip --upgrade
-.env/bin/python -m pip install opensearch-py requests_aws4auth
-.env/bin/python -m pip install boto3 langchain pypdf pydantic
-.env/bin/python -m pip install sentence_transformers
+python3 -m ensurepip --upgrade
+python3 -m pip install opensearch-py requests_aws4auth
+python3 -m pip install boto3 langchain pypdf pydantic=1.10.1
+python3 -m pip install sentence_transformers
 
-.env/bin/python -m pip install  --no-build-isolation --force-reinstall \
+python3 -m pip install  --no-build-isolation --force-reinstall \
     dependencies/awscli-*-py3-none-any.whl \
     dependencies/boto3-*-py3-none-any.whl \
     dependencies/botocore-*-py3-none-any.whl
 
-.env/bin/python -m pip install streamlit
+python3 -m pip install streamlit
