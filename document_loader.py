@@ -122,8 +122,8 @@ def crawl_github_subfolder_recursive(owner, repo, subfolder, client, index):
 
 
 def main(argv):
-    host = os.environ.get('OPENSEARCH_HOST')
-    region = os.environ.get('OPENSEARCH_REGION')
+    host = os.environ.get('AOSS_VECOTRSEARCH_ENDPOINT')
+    region = os.environ.get('AOSS_VECOTRSEARCH_REGION')
     index = "opensearch_qna"
     service = 'aoss'
 
