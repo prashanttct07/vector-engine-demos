@@ -14,6 +14,9 @@ model = SentenceTransformer(model_name)
 # Set the desired vector size
 vector_size = 768
 
+# movies in JSON format
+json_file_path = "sample-movies.json"
+
 def full_load(index_name, client):
     
 # if index_name exists in collection, don't run this again 
