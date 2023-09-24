@@ -17,7 +17,7 @@ st.sidebar.header("Search Filters")
 st.header('Compare lexical search with semantic search :technologist:')
 st.write("This demo shows the difference between lexical search and semantic search for same queries across sample data sets for Movies, Product Q&A of Amazon products etc ")
 st.divider() 
-question = st.text_input("Enter your search term", "Movie to watch with friends")
+question = st.text_input("Enter your search term", "Movie to watch in holidays")
 
 # Filters
 with st.sidebar.form("Filters"):
@@ -43,17 +43,17 @@ if question:
             headings_knn, image_knn, headings_kw, image_kw = st.columns(4)
             with headings_knn:           
                 if i < len(response_knn):
-                    st.header(response_knn[i]['title'] + " (" +  response_knn[i]["year"] + ")")
+                    st.header(response_knn[i]['title'] + " (" +  str(response_knn[i]["year"]) + ")")
                     st.write("**" + response_knn[i]["plot"] + "**")
-                    st.write("**"  + str(response_knn[i]["rating"]) + "** :star2:     " + "**" + response_knn[i]["genres"] + "**")
+                    st.write("**"  + str(response_knn[i]["rating"]) + "** :star2:     " + "**" + str(response_knn[i]["genres"]) + "**")
             with image_knn:
                 if i < len(response_knn):
                     st.image(response_knn[i]["image_url"], caption=response_knn[i]["title"], width=100)    
             with headings_kw:            
                 if i < len(response_kw):
-                    st.header(response_kw[i]["title"] + " (" +  response_kw[i]["year"] + ")")
+                    st.header(response_kw[i]["title"] + " (" +  str(response_kw[i]["year"]) + ")")
                     st.write("**" + response_kw[i]["plot"] + "**")
-                    st.write("**"  + str(response_kw[i]["rating"]) + "** :star2:     " + "**" + response_kw[i]["genres"] + "**")
+                    st.write("**"  + str(response_kw[i]["rating"]) + "** :star2:     " + "**" + str(response_kw[i]["genres"]) + "**")
             with image_kw:
                 if i < len(response_kw):
                     st.image(response_kw[i]["image_url"], caption=response_kw[i]["title"], width=100)    
