@@ -27,8 +27,7 @@ with st.sidebar.form("Filters"):
     rating_filter = st.sidebar.slider('Enter Rating', min_value=0.0, max_value=10.0, value=5.0)
 
 if question:
-    response_knn, doc_count_knn, response_kw, doc_count_kw = opensearch.query_movies(question, sort_by, genres_filter, rating_filter, "imdb-vector")
-    # print(f"list item 0: {response_knn[0]['title']}")
+    response_knn, doc_count_knn, response_kw, doc_count_kw = opensearch.query_movies(question, sort_by, genres_filter, rating_filter, "opensearch_movies")
 
     with st.container():
         knn, kw = st.columns(2)
