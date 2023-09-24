@@ -14,7 +14,7 @@ model = SentenceTransformer(model_name)
 # Set the desired vector size
 vector_size = 768
 
-def full_load(json_file_path, index_name, client):
+def full_load(index_name, client):
     
 # if index_name exists in collection, don't run this again 
     # create a new index
