@@ -17,7 +17,7 @@ from botocore.config import Config
 #
 #     region :
 #         Optional name of the AWS Region in which the service should be called (e.g. "us-east-1").
-#         If not specified, AWS_REGION or AWS_DEFAULT_REGION environment variable will be used.
+#         If not specified, AOSS_VECOTRSEARCH_REGION environment variable will be used.
 #
 #     url_override :
 #         Optional override for the Bedrock service API Endpoint. If setting this, it should usually
@@ -27,11 +27,11 @@ def get_bedrock_client(assumed_role=None, region='us-east-1', url_override = Non
     boto3_kwargs = {}
     session = boto3.Session()
 
-    target_region = os.environ.get('AWS_DEFAULT_REGION',region)
+    target_region = os.environ.get('AOSS_VECOTRSEARCH_REGION',region)
 
     print(f"Create new client\n  Using region: {target_region}")
-    if 'AWS_PROFILE' in os.environ:
-        print(f"  Using profile: {os.environ['AWS_PROFILE']}")
+    if 'AOSS_BEDROCK_PROFILE' in os.environ:
+        print(f"  Using profile: {os.environ['AOSS_BEDROCK_PROFILE']}")
 
     retry_config = Config(
         region_name = target_region,
