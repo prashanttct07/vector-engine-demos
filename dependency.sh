@@ -24,6 +24,7 @@ cd ..
 # python3 -m venv .env
 # Install into the virtual environment
 # source .env/bin/activate
+
 # download requirements
 python3 -m ensurepip --upgrade
 python3 -m pip install --upgrade pip

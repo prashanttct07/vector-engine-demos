@@ -5,7 +5,6 @@ import os
 from sentence_transformers import SentenceTransformer
 import sys
 from langchain.llms.bedrock import Bedrock
-import traceback, socket, datetime
 
 module_path = "./"
 sys.path.append(os.path.abspath(module_path))
