@@ -23,7 +23,7 @@ vector_size = 768
 host = os.environ.get('AOSS_VECOTRSEARCH_ENDPOINT')
 region = os.environ.get('AOSS_VECOTRSEARCH_REGION')
 
-# os.environ["AOSS_BEDROCK_PROFILE"] = "<YOUR_PROFILE>"
+os.environ["AOSS_BEDROCK_PROFILE"] = "bedrock"
 
 # Bedrock Clients connection
 boto3_bedrock = bedrock.get_bedrock_client(os.environ.get('BEDROCK_ASSUME_ROLE', None))
