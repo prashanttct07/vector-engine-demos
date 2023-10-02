@@ -37,4 +37,4 @@ python3 -m pip install  --no-build-isolation --force-reinstall \
     dependencies/boto3-*-py3-none-any.whl \
     dependencies/botocore-*-py3-none-any.whl
 
-python3 -m pip install streamlit
+python3 -m pip install streamlit==1.27.0
