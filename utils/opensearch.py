@@ -26,7 +26,11 @@ region = os.environ.get('AOSS_VECOTRSEARCH_REGION')
 # os.environ["AOSS_BEDROCK_PROFILE"] = "<YOUR_PROFILE>"
 
 # Bedrock Clients connection
-boto3_bedrock = bedrock.get_bedrock_client(os.environ.get('BEDROCK_ASSUME_ROLE', None))
+boto3_bedrock = bedrock.get_bedrock_client(
+    assumed_role=os.environ.get("AOSS_BEDROCK_ASSUME_ROLE", None),
+    region=os.environ.get("AOSS_VECOTRSEARCH_REGION", None),
+    runtime=True
+)
 
 # - create the LLM Model
 claude_llm = Bedrock(model_id="anthropic.claude-instant-v1", client=boto3_bedrock, model_kwargs={'max_tokens_to_sample':1000})

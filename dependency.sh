@@ -29,12 +29,18 @@ cd ..
 python3 -m ensurepip --upgrade
 python3 -m pip install --upgrade pip
 python3 -m pip install opensearch-py requests_aws4auth
-python3 -m pip install boto3 langchain pypdf==3.8.1 pydantic==1.10.8
+python3 -m pip install langchain pypdf==3.8.1 pydantic==1.10.8
 python3 -m pip install sentence_transformers
 
-python3 -m pip install  --no-build-isolation --force-reinstall \
-    dependencies/awscli-*-py3-none-any.whl \
-    dependencies/boto3-*-py3-none-any.whl \
-    dependencies/botocore-*-py3-none-any.whl
+# python3 -m pip install  --no-build-isolation --force-reinstall \
+#     dependencies/awscli-*-py3-none-any.whl \
+#     dependencies/boto3-*-py3-none-any.whl \
+#     dependencies/botocore-*-py3-none-any.whl
+
+python3 -m pip install --no-build-isolation --force-reinstall \
+    "boto3>=1.28.57" \
+    "awscli>=1.29.57" \
+    "botocore>=1.31.57"
 
 python3 -m pip install streamlit==1.27.0
+
