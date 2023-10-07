@@ -34,7 +34,7 @@ boto3_bedrock = bedrock.get_bedrock_client(
 
 # - create the LLM Model
 claude_llm = Bedrock(model_id="anthropic.claude-instant-v1", client=boto3_bedrock, model_kwargs={'max_tokens_to_sample':1000})
-titan_llm = Bedrock(model_id= "amazon.titan-tg1-large", client=boto3_bedrock)
+titan_llm = Bedrock(model_id= "amazon.titan-text-express-v1", client=boto3_bedrock)
 
 # - Create Prompts
 def get_claude_prompt(context, user_question, knowledgebase_filter):
