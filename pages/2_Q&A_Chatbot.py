@@ -54,7 +54,8 @@ question = st.text_input("Ask me anything about OpenSearch:", "Difference betwee
 
 # Filters
 with st.sidebar.form("Q&A Form"):
-    model_filter = st.sidebar.selectbox("Select LLM Model", ["Claude", "Titan"])
+    # model_filter = st.sidebar.selectbox("Select LLM Model", ["Claude", "Titan"])
+    model_filter = st.sidebar.selectbox("Select LLM Model", ["Claude"])
     knowledgebase_filter = st.sidebar.toggle("Within Knowledge Base", value=True )
 
 if question:
