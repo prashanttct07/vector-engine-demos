@@ -24,10 +24,10 @@ with st.sidebar.form("Filters"):
     # dataset = st.sidebar.selectbox("Select Dataset", ["Movies", "Headsets"])
     sort_by = st.sidebar.selectbox("Sort By", ["score", "year", "rating"])
     genres_filter = st.sidebar.selectbox("Select Genre", ["*", "Comedy", "Mystery", "Action", "Romance" ])
-    imdb_rating_filter = st.sidebar.slider('Enter imdb_rating', min_value=0.0, max_value=10.0, value=5.0)
+    rating_filter = st.sidebar.slider('Enter rating', min_value=0.0, max_value=10.0, value=5.0)
 
 if question:
-    response_knn, doc_count_knn, response_kw, doc_count_kw = opensearch.query_movies(question, sort_by, genres_filter, imdb_rating_filter, "opensearch_movies")
+    response_knn, doc_count_knn, response_kw, doc_count_kw = opensearch.query_movies(question, sort_by, genres_filter, rating_filter, "opensearch_movies")
 
     with st.container():
         knn, kw = st.columns(2)
@@ -45,7 +45,7 @@ if question:
                 if i < len(response_knn):
                     st.header(response_knn[i]['title'] + " (" +  str(response_knn[i]["year"]) + ")")
                     st.write("**" + response_knn[i]["plot"] + "**")
-                    st.write("**"  + str(response_knn[i]["imdb_rating"]) + "** :star2:     " + "**" + str(response_knn[i]["genres"]) + "**")
+                    st.write("**"  + str(response_knn[i]["rating"]) + "** :star2:     " + "**" + str(response_knn[i]["genres"]) + "**")
             with image_knn:
                 if i < len(response_knn):
                     st.image(response_knn[i]["poster"], caption=response_knn[i]["title"], width=100)    
@@ -53,7 +53,7 @@ if question:
                 if i < len(response_kw):
                     st.header(response_kw[i]["title"] + " (" +  str(response_kw[i]["year"]) + ")")
                     st.write("**" + response_kw[i]["plot"] + "**")
-                    st.write("**"  + str(response_kw[i]["imdb_rating"]) + "** :star2:     " + "**" + str(response_kw[i]["genres"]) + "**")
+                    st.write("**"  + str(response_kw[i]["rating"]) + "** :star2:     " + "**" + str(response_kw[i]["genres"]) + "**")
             with image_kw:
                 if i < len(response_kw):
                     st.image(response_kw[i]["poster"], caption=response_kw[i]["title"], width=100)    

@@ -39,7 +39,7 @@ def full_load(index_name, client):
               "poster": {"type":"text","fields":{"keyword":{"type":"keyword","ignore_above":256}}},
               "gross_earning": {"type":"float"},
               "metascore": {"type":"float"},
-              "imdb_rating": {"type":"double"},
+              "rating": {"type":"double"},
               "runtime": {"type":"keyword"},
               "vote": {"type":"long"},
               "year": {"type":"long"}

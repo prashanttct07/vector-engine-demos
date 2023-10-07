@@ -111,7 +111,7 @@ def query_qna(query, index):
     return relevant_documents
 
 
-def query_movies(query, sort, genres, imdb_rating, index):
+def query_movies(query, sort, genres, rating, index):
 
     if sort == 'year':
         sort_type = "year"
@@ -140,7 +140,7 @@ def query_movies(query, sort, genres, imdb_rating, index):
             "includes": [
                 "title",
                 "plot",
-                "imdb_rating",
+                "rating",
                 "year",
                 "poster",
                 "genres"
@@ -177,7 +177,7 @@ def query_movies(query, sort, genres, imdb_rating, index):
                     },
                     {
                       "range": {
-                        "imdb_rating": {
+                        "rating": {
                           "gte": rating
                         }
                       }
@@ -197,7 +197,7 @@ def query_movies(query, sort, genres, imdb_rating, index):
     # Extract relevant information from the search result
     hits_knn = response_knn['hits']['hits']
     doc_count_knn = response_knn['hits']['total']['value']
-    results_knn = [{'genres':  hit['_source']['genres'],'poster':  hit['_source']['poster'],'title': hit['_source']['title'], 'imdb_rating': hit['_source']['imdb_rating'], 'year': hit['_source']['year'], 'plot' : hit['_source']['plot']} for hit in hits_knn]
+    results_knn = [{'genres':  hit['_source']['genres'],'poster':  hit['_source']['poster'],'title': hit['_source']['title'], 'rating': hit['_source']['rating'], 'year': hit['_source']['year'], 'plot' : hit['_source']['plot']} for hit in hits_knn]
 
 
 
@@ -214,7 +214,7 @@ def query_movies(query, sort, genres, imdb_rating, index):
             "includes": [
                 "title",
                 "plot",
-                "imdb_rating",
+                "rating",
                 "year",
                 "poster",
                 "genres"
@@ -239,7 +239,7 @@ def query_movies(query, sort, genres, imdb_rating, index):
                     },
                     {
                       "range": {
-                        "imdb_rating": {
+                        "rating": {
                           "gte": rating
                         }
                       }
@@ -257,7 +257,7 @@ def query_movies(query, sort, genres, imdb_rating, index):
     # Extract relevant information from the search result
     hits_kw = response_kw['hits']['hits']
     doc_count_kw = response_kw['hits']['total']['value']
-    results_kw = [{'genres':  hit['_source']['genres'],'poster':  hit['_source']['poster'],'title': hit['_source']['title'], 'imdb_rating': hit['_source']['imdb_rating'], 'year': hit['_source']['year'], 'plot' : hit['_source']['plot']} for hit in hits_kw]
+    results_kw = [{'genres':  hit['_source']['genres'],'poster':  hit['_source']['poster'],'title': hit['_source']['title'], 'rating': hit['_source']['rating'], 'year': hit['_source']['year'], 'plot' : hit['_source']['plot']} for hit in hits_kw]
 
     # print (f"Search Results: {search_results}")
     return results_knn, doc_count_knn, results_kw, doc_count_kw
