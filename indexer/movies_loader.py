@@ -36,11 +36,11 @@ def full_load(index_name, client):
               "certificate": {"type":"text","fields":{"keyword":{"type":"keyword","ignore_above":256}}},
               "directors": {"type":"text","fields":{"keyword":{"type":"keyword","ignore_above":256}}},
               "genres": {"type":"text","fields":{"keyword":{"type":"keyword","ignore_above":256}}},
-              "image_url": {"type":"text","fields":{"keyword":{"type":"keyword","ignore_above":256}}},
+              "poster": {"type":"text","fields":{"keyword":{"type":"keyword","ignore_above":256}}},
               "gross_earning": {"type":"float"},
               "metascore": {"type":"float"},
-              "rating": {"type":"double"},
-              "time_minute": {"type":"long"},
+              "imdb_rating": {"type":"double"},
+              "runtime": {"type":"keyword"},
               "vote": {"type":"long"},
               "year": {"type":"long"}
             }
