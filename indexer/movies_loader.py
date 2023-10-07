@@ -80,7 +80,7 @@ def full_load(index_name, client):
             actions.append(action)
             actions.append(json_data.copy())
     
-            if(i > 10 ):
+            if(i > 99 ):
                 client.bulk(body=actions)
                 print(f"bulk request sent with size: {i}")
                 print(f"total docs sent so far: {j}")
