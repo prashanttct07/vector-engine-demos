@@ -30,6 +30,7 @@ python3 -m ensurepip --upgrade
 python3 -m pip install --upgrade pip
 python3 -m pip install opensearch-py requests_aws4auth
 python3 -m pip install langchain pypdf==3.8.1 pydantic==1.10.8
+python3 -m pip install -U langchain-community
 python3 -m pip install sentence_transformers
 
 # python3 -m pip install  --no-build-isolation --force-reinstall \
