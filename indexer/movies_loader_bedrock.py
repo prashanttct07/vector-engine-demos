@@ -13,7 +13,8 @@ vector_size = 1536  # Amazon Titan Embeddings model dimension
 json_file_path = "sample-movies.json"
 
 # Initialize Bedrock client
-bedrock_runtime = boto3.client('bedrock-runtime')
+region = os.environ.get('AOSS_VECOTRSEARCH_REGION')
+bedrock_runtime = boto3.client('bedrock-runtime', region_name=region)
 
 def generate_embedding(text):
     """Generate embeddings using Amazon Bedrock Titan Embeddings model"""
