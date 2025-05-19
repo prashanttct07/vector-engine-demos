@@ -1,0 +1,128 @@
+from opensearchpy import OpenSearch, RequestsHttpConnection
+from requests_aws4auth import AWS4Auth
+import json
+import boto3
+import os
+import time
+import sys, getopt
+
+# Set the vector size for Titan Embeddings model
+vector_size = 1536  # Amazon Titan Embeddings model dimension
+
+# movies in JSON format
+json_file_path = "sample-movies.json"
+
+# Initialize Bedrock client
+bedrock_runtime = boto3.client('bedrock-runtime')
+
+def generate_embedding(text):
+    """Generate embeddings using Amazon Bedrock Titan Embeddings model"""
+    response = bedrock_runtime.invoke_model(
+        modelId='amazon.titan-embed-text-v1',
+        contentType='application/json',
+        accept='application/json',
+        body=json.dumps({
+            'inputText': text
+        })
+    )
+    
+    response_body = json.loads(response['body'].read())
+    return response_body['embedding']
+
+def full_load(index_name, client):
+    
+    # if index_name exists in collection, don't run this again 
+    # create a new index
+    if not client.indices.exists(index=index_name):
+        index_body = {
+            "settings": {
+                "index.knn": True
+          },
+          'mappings': {
+            'properties': {
+              "title": {"type":"text","fields":{"keyword":{"type":"keyword","ignore_above":256}}},
+              "v_title": { "type": "knn_vector", "dimension": vector_size },
+              "plot": {"type":"text","fields":{"keyword":{"type":"keyword","ignore_above":256}}},
+              "v_plot": { "type": "knn_vector", "dimension": vector_size },
+              "actors": {"type":"text","fields":{"keyword":{"type":"keyword","ignore_above":256}}},
+              "certificate": {"type":"text","fields":{"keyword":{"type":"keyword","ignore_above":256}}},
+              "directors": {"type":"text","fields":{"keyword":{"type":"keyword","ignore_above":256}}},
+              "genres": {"type":"text","fields":{"keyword":{"type":"keyword","ignore_above":256}}},
+              "poster": {"type":"text","fields":{"keyword":{"type":"keyword","ignore_above":256}}},
+              "gross_earning": {"type":"float"},
+              "metascore": {"type":"float"},
+              "rating": {"type":"double"},
+              "runtime": {"type":"keyword"},
+              "vote": {"type":"long"},
+              "year": {"type":"long"}
+            }
+          }
+        }
+
+        client.indices.create(
+          index=index_name, 
+          body=index_body
+        )
+        time.sleep(5)
+    
+    actions = []
+    i = 0
+    j = 0
+    action = {"index": {"_index": index_name}}
+
+    # Read and index the JSON data
+    with open(json_file_path, 'r') as file:
+        for item in file:
+            json_data = json.loads(item)
+            if 'index' in json_data:
+                continue
+
+            # Generate embedding for title using Bedrock
+            title = json_data['title']
+            v_title = generate_embedding(title)
+            json_data['v_title'] = v_title
+    
+            if 'plot' in json_data:
+                # Generate embedding for plot using Bedrock
+                plot = json_data['plot']
+                v_plot = generate_embedding(plot)
+                json_data['v_plot'] = v_plot
+    
+            # Prepare bulk request
+            actions.append(action)
+            actions.append(json_data.copy())
+    
+            if(i > 99):
+                client.bulk(body=actions)
+                print(f"bulk request sent with size: {i}")
+                print(f"total docs sent so far: {j}")
+                i = 0
+                actions = []
+            i += 1
+            j += 1
+
+
+def main(argv):
+    host = os.environ.get('AOSS_VECOTRSEARCH_ENDPOINT')
+    region = os.environ.get('AOSS_VECOTRSEARCH_REGION')
+    index = "opensearch_movies"
+    service = 'aoss'
+
+    credentials = boto3.Session().get_credentials()
+    awsauth = AWS4Auth(credentials.access_key, credentials.secret_key, region, service,
+                   session_token=credentials.token)
+
+    # Build the OpenSearch client
+    client = OpenSearch(
+        hosts = [{'host': host, 'port': 443}],
+        http_auth = awsauth,
+        timeout = 300,
+        use_ssl = True,
+        verify_certs = True,
+        connection_class = RequestsHttpConnection
+    )
+    print(f"OpenSearch Client - Sending to Amazon OpenSearch Serverless host {host} in Region {region} \n")
+    full_load(index, client)
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
