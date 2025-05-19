@@ -4,7 +4,9 @@ import os
 
 module_path = ".."
 sys.path.append(os.path.abspath(module_path))
-from utils import opensearch
+
+# from utils import opensearch
+from utils import bedrockopensearch as opensearch
 
 st.set_page_config(
     page_title="Semantic Search using OpenSearch",
