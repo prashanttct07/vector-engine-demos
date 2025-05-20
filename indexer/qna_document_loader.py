@@ -1,5 +1,3 @@
-
-########
 import requests
 import sys, getopt
 from opensearchpy import OpenSearch, RequestsHttpConnection
@@ -8,15 +6,12 @@ import boto3
 import json
 import os
 import time
-from langchain.text_splitter import CharacterTextSplitter
-from sentence_transformers import SentenceTransformer
 
-# Load the SentenceTransformer model
-model_name = 'sentence-transformers/msmarco-distilbert-base-tas-b'
-model = SentenceTransformer(model_name)
+# Initialize Bedrock client
+bedrock_client = boto3.client('bedrock-runtime', region_name=os.environ.get('AOSS_VECOTRSEARCH_REGION'))
 
-# Set the desired vector size (it should be alligned with the model you are using)
-vector_size = 768
+# Set the desired vector size for Titan Embeddings model
+vector_size = 1536  # Titan Embeddings G1 - Text produces 1536-dimensional vectors
 
 # Usage example For service docs
 owner = "awsdocs"
@@ -33,75 +28,109 @@ subfolder = "doc_source"
 # repo = "project-website"
 # subfolder = "_posts"
 
+def get_bedrock_embedding(text):
+    """Generate embeddings using Amazon Bedrock's Titan Embeddings model"""
+    try:
+        response = bedrock_client.invoke_model(
+            modelId='amazon.titan-embed-text-v1',
+            contentType='application/json',
+            accept='application/json',
+            body=json.dumps({
+                'inputText': text
+            })
+        )
+        
+        response_body = json.loads(response['body'].read())
+        return response_body['embedding']
+    except Exception as e:
+        print(f"Error generating embeddings: {e}")
+        return None
+
+def split_text_with_bedrock(content, chunk_size=1000, chunk_overlap=100):
+    """Split text into chunks using simple text processing"""
+    chunks = []
+    content_length = len(content)
+    
+    # Process content in chunks
+    for i in range(0, content_length, chunk_size - chunk_overlap):
+        # Get chunk with appropriate size
+        end_idx = min(i + chunk_size, content_length)
+        chunk = content[i:end_idx]
+        
+        # Only add non-empty chunks that meet minimum size requirements
+        if len(chunk.strip()) > 50:  # Minimum size threshold
+            chunks.append(chunk)
+            
+    return chunks
+
 def index_embedding(content, title, repository, client, index):
-    actions =[]
+    actions = []
     bulk_size = 0
     action = {"index": {"_index": index}}
     
-    text_splitter = CharacterTextSplitter(
-    # Set a really small chunk size, just to show.
-    chunk_size = 1000,
-    chunk_overlap  = 100,
-    separator=" "
-    )
-
-    docs = text_splitter.split_text(content)
-    print (f"Total Chunk {len(docs)} for {title}")
+    # Split text using our custom function instead of LangChain
+    docs = split_text_with_bedrock(content, chunk_size=1000, chunk_overlap=100)
+    
+    print(f"Total Chunk {len(docs)} for {title}")
     for doc in docs: 
-        # sample_embedding = np.array(bedrock_embeddings.embed_query(document.page_content))
-        embeddings = model.encode(doc)
-        vector_document = {
-            "title": title,
-            "content": content,
-            "v_content": embeddings,
-            "repository": repository
-        }
-        # print (vector_document)
-        actions.append(action)
-        actions.append(vector_document)
+        # Generate embeddings using Bedrock instead of SentenceTransformer
+        embeddings = get_bedrock_embedding(doc)
+        
+        if embeddings:
+            vector_document = {
+                "title": title,
+                "content": doc,  # Store the chunk, not the entire content
+                "v_content": embeddings,
+                "repository": repository
+            }
+            
+            actions.append(action)
+            actions.append(vector_document)
 
-        bulk_size+=1
-        if(bulk_size > 100 ):
-            client.bulk(body=actions)
-            print(f"bulk request sent with size: {bulk_size}")
-            bulk_size = 0
+            bulk_size += 1
+            if bulk_size > 100:
+                client.bulk(body=actions)
+                print(f"bulk request sent with size: {bulk_size}")
+                actions = []  # Reset actions after bulk
+                bulk_size = 0
 
-    #ingest remaining documents
-    print("Sending remaining documents with size: ", bulk_size)
-    client.bulk(body=actions)
+    # Ingest remaining documents
+    if actions:
+        print("Sending remaining documents with size: ", bulk_size)
+        client.bulk(body=actions)
 
 def crawl_github_subfolder_recursive(owner, repo, subfolder, client, index):
-
     # Create an index if it does not exist
     if not client.indices.exists(index=index):
         index_body = {
             "settings": {
                 "index.knn": True
-          },
-          'mappings': {
-            'properties': {
-              "repository": { "type": "text"},
-              "title": { "type": "text"},
-              "content": { "type": "text"},
-              "v_content": { "type": "knn_vector", "dimension": vector_size }
+            },
+            'mappings': {
+                'properties': {
+                    "repository": { "type": "text"},
+                    "title": { "type": "text"},
+                    "content": { "type": "text"},
+                    "v_content": { "type": "knn_vector", "dimension": vector_size }
+                }
             }
-          }
         }
     
         client.indices.create(
-          index=index, 
-          body=index_body
+            index=index, 
+            body=index_body
         )
         time.sleep(5)
-
 
     # Fetch repository information
     repo_url = f"https://api.github.com/repos/{owner}/{repo}"
     repo_info = requests.get(repo_url).json()
-    print (repo_url)
+    print(repo_url)
+    
     # Fetch contents of the subfolder
     contents_url = repo_info["contents_url"].replace("{+path}", subfolder)
     contents = requests.get(contents_url).json()
+    
     # Filter and process files recursively
     for item in contents:
         print(f"title: {item['name']}")
@@ -118,8 +147,7 @@ def crawl_github_subfolder_recursive(owner, repo, subfolder, client, index):
         elif item["type"] == "dir":
             # Recursively crawl subdirectories
             subfolder_path = os.path.join(subfolder, item["name"])
-            crawl_github_subfolder_recursive(owner, repo, subfolder_path)
-
+            crawl_github_subfolder_recursive(owner, repo, subfolder_path, client, index)
 
 def main(argv):
     host = os.environ.get('AOSS_VECOTRSEARCH_ENDPOINT')
