@@ -5,7 +5,8 @@ import os
 module_path = "./"
 sys.path.append(os.path.abspath(module_path))
 from utils import bedrock
-from utils import opensearch
+#from utils import opensearch
+from utils import bedrockopensearch as opensearch
 
 # global constants
 session_variables = [("question", []), ("answer", [])]
